@@ -15,6 +15,8 @@
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
 		destroy-method="close">
 		<property name="driverClassName" value="${db.driver_class}" />
+		<property name="username" value="${db.username}"/>
+		<property name="password" value="${db.password}"/>
 		<property name="url" value="${db.url}" />
 		<property name="initialSize" value="${db.initialSize}" />
 		<property name="maxActive" value="${db.maxActive}" />
@@ -24,7 +26,7 @@
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
-		<property name="packagesToScan" value="net.hoyoung.weibospider.api.entity" />
+		<property name="packagesToScan" value="weibo4j.model" />
 		<property name="hibernateProperties">
 			<props>
 				<prop key="bytecode.use_reflection_optimizer">false</prop>
@@ -33,10 +35,14 @@
 			</props>
 		</property>
 	</bean>
+	<bean id="hibernateTemplate" class="org.springframework.orm.hibernate4.HibernateTemplate">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
 	<bean id="config"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		<property name="locations">
 			<list>
+				<value>classpath:application.properties</value>
 				<value>classpath:config.properties</value>
 			</list>
 		</property>
