@@ -10,8 +10,25 @@
              http://www.springframework.org/schema/mvc/spring-mvc.xsd
 			 http://www.springframework.org/schema/context 
 			 http://www.springframework.org/schema/context/spring-context.xsd">
-			 
-	<!-- <mvc:annotation-driven /> -->
+
+    <mvc:annotation-driven>
+        <mvc:message-converters register-defaults="true">
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes" value="text/html;charset=UTF-8"/>
+                <property name="features">
+                    <array>
+                        <value>WriteMapNullValue</value>
+                        <value>WriteNullStringAsEmpty</value>
+                    </array>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <context:component-scan base-package="net.hoyoung"
+                            use-default-filters="false">
+        <context:include-filter type="regex"
+                                expression="net.hoyoung.weibospider.api.controller.*" />
+    </context:component-scan>
 	<!-- 允许访问静态资源 -->
 	<mvc:default-servlet-handler/>
     <bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
