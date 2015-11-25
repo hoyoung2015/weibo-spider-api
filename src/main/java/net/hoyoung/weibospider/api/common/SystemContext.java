@@ -1,4 +1,4 @@
-package net.hoyoung.weibospider.api;
+package net.hoyoung.weibospider.api.common;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

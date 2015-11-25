@@ -14,11 +14,11 @@ import java.util.regex.Pattern;
 public class JsonTest {
     public static void main(String[] args) {
         String tmp ="{\"coordinates\":[25.02038,102.72069],\"type\":\"Point\"}";
-        Map<String,Object> map = JSON.parseObject("{\"coordinates\":[25.02038,102.72069],\"type\":\"Point\"}", new TypeReference<Map<String, Object>>() {
-        });
-        System.out.println(map);
-        tmp = (String)map.get("coordinates");
 
-        Matcher m = Pattern.compile("(\\d+\\.\\d+)").matcher(tmp);
+        Matcher m = Pattern.compile("(\\d+\\.\\d+),(\\d+\\.\\d+)").matcher(tmp);
+        if(m.find()){
+            System.out.println(m.group(1));
+            System.out.println(m.group(2));
+        }
     }
 }

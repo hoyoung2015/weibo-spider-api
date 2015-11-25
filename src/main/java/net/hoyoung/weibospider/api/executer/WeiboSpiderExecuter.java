@@ -1,8 +1,10 @@
 package net.hoyoung.weibospider.api.executer;
 
-import net.hoyoung.weibospider.api.BaseStatus;
-import net.hoyoung.weibospider.api.SystemContext;
+import net.hoyoung.weibospider.api.common.MessageQueue;
+import net.hoyoung.weibospider.api.common.SystemContext;
 import net.hoyoung.weibospider.api.service.StatusService;
+import net.hoyoung.weibospider.api.vo.BaseStatus;
+import net.hoyoung.weibospider.api.vo.Message;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
@@ -22,42 +24,42 @@ import weibo4j.model.WeiboException;
 public class WeiboSpiderExecuter {
     protected Log logger = LogFactory.getLog(getClass());
     @Autowired
+    private MessageQueue messageQueue;
+    @Autowired
     private TaskExecutor taskExecutor;
     @Autowired
     private StatusService statusService;
     @Autowired
     SystemContext systemContext;
-    private DaeMonThread daeMonThread = new DaeMonThread();
-    public boolean start(){
-        logger.info("抓取执行器开始抓取");
-        /*Timeline timeline = new Timeline(systemContext.ACCESS_TOCKEN);
-        while (systemContext.SPIDER_ENABLE){
-            try {
-                StatusWapper status = timeline.getPublicTimeline(200,0);
-                if(status!=null&&status.getStatuses()!=null&&status.getStatuses().size()>0){
-                    for (Status doc : status.getStatuses()){
-                        statusService.saveOrUpdate(doc);
-                    }
-                }
-            } catch (WeiboException e) {
-                e.printStackTrace();
-            }
-            try {
-                logger.info("守护线程工作中");
-                Thread.sleep(systemContext.SPIDER_SLEEP_TIME);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }*/
+    private DaeMonThread daeMonThread;
+
+    private long totalDoc;//总的公共微博数量
+
+    public long getTotalDoc() {
+        return totalDoc;
+    }
+
+    public BaseStatus start(){
+
+        if(daeMonThread!=null && daeMonThread.isAlive()){
+            logger.info("守护线程已经启动");
+            return new BaseStatus(true,"抓取执行器已经开启");
+        }
+        logger.info("创建守护线程");
+        daeMonThread = new DaeMonThread();
         daeMonThread.start();
-        return true;
+        totalDoc = 0;
+        logger.info("抓取执行器开始抓取");
+        return new BaseStatus(true,"抓取执行器开始抓取");
     }
     public BaseStatus stop(){
-        logger.info("抓取执行器停止");
-        if(!daeMonThread.isAlive()){
+
+        if(daeMonThread==null || !daeMonThread.isAlive()){
+            logger.info("线程没有在运行");
             return new BaseStatus(false,"线程没有在运行");
         }
         daeMonThread.interrupt();
+        logger.info("抓取执行器停止");
         return new BaseStatus(true,"线程成功停止");
     }
     public WeiboSpiderExecuter() {
@@ -81,6 +83,7 @@ public class WeiboSpiderExecuter {
                     StatusWapper status = timeline.getPublicTimeline(WeiboSpiderExecuter.this.systemContext.SPIDER_PAGE_SIZE,0);
                     if(status!=null&&status.getStatuses()!=null&&status.getStatuses().size()>0){
                         for (Status doc : status.getStatuses()){
+                            WeiboSpiderExecuter.this.totalDoc++;
                             statusService.saveOrUpdate(doc);
                         }
                     }
@@ -89,6 +92,11 @@ public class WeiboSpiderExecuter {
                     logger.info(e.getMessage());
                     logger.info("从阻塞中退出..."+isInterrupted());
                 } catch (WeiboException e) {
+                    Message message = new Message("ERROR","500",e.getMessage());
+                    WeiboSpiderExecuter.this.messageQueue.put(message);
+
+                    logger.error(e.getMessage());
+                    this.interrupt();
                     e.printStackTrace();
                 }
             }

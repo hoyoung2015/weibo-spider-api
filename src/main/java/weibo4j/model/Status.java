@@ -3,6 +3,8 @@ package weibo4j.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import weibo4j.http.Response;
@@ -101,24 +103,11 @@ public class Status extends WeiboResponse {
 	}
 
 	private void getGeoInfo(String geo) {
-
-
-
-
-        System.out.println(geo);
-        StringBuffer value= new StringBuffer();
-		for(char c:geo.toCharArray()){
-			if(c>45&&c<58){
-				value.append(c);
-			}
-			if(c==44){
-				if(value.length()>0){
-					latitude=Double.parseDouble(value.toString());
-					value.delete(0, value.length());
-				}
-			}
-		}
-        longitude=Double.parseDouble(value.toString());
+        Matcher m = Pattern.compile("(\\d+\\.\\d+),(\\d+\\.\\d+)").matcher(geo);
+        if(m.find()){
+            latitude=Double.parseDouble(m.group(1));
+            longitude=Double.parseDouble(m.group(2));
+        }
 	}
 
 
